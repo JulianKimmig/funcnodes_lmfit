@@ -5,6 +5,7 @@ from lmfit.models import GaussianModel, LinearModel
 import numpy as np
 from funcnodes_lmfit._auto_model import _AUTOMODELS
 
+
 from funcnodes_lmfit.model import (
     SplineModel_node,
     ExpressionModel_node,
@@ -16,6 +17,11 @@ from funcnodes_lmfit.model import (
     auto_model,
     quickmodel,
 )
+from funcnodes_lmfit.use_model import predict, PANDAS_INSTALLED
+
+if PANDAS_INSTALLED:
+    import pandas as pd
+    from funcnodes_lmfit.use_model import predict_df
 
 fn.config.IN_NODE_TEST = True
 
@@ -402,3 +408,130 @@ class TestModelOperations(IsolatedAsyncioTestCase):
 
         with self.assertRaises(fn.NodeTriggerError):
             await merge
+
+
+class TestUseModel(IsolatedAsyncioTestCase):
+    async def test_predict(self):
+        x = np.linspace(0, 10, 100)
+        model = GaussianModel()
+        params = model.make_params()
+        y = model.eval(params, x=x)
+
+        out = predict()
+        out.inputs["x"].value = x
+        out.inputs["model"].value = model
+
+        await out
+
+        prediction, components = (
+            out.outputs["prediction"].value,
+            out.outputs["components"].value,
+        )
+
+        self.assertIsInstance(prediction, np.ndarray)
+        self.assertIsInstance(components, np.ndarray)
+
+        self.assertEqual(prediction.shape, (100,))
+        self.assertEqual(components.shape, (100, 1))
+        self.assertTrue(np.allclose(prediction, y))
+
+    async def test_predict_composite(self):
+        x = np.linspace(0, 10, 100)
+        model = GaussianModel(prefix="gaussian") + LinearModel(prefix="linear")
+
+        params = model.make_params()
+        y = model.eval(params, x=x)
+
+        out = predict()
+        out.inputs["x"].value = x
+        out.inputs["model"].value = model
+
+        await out
+
+        prediction, components = (
+            out.outputs["prediction"].value,
+            out.outputs["components"].value,
+        )
+
+        self.assertIsInstance(prediction, np.ndarray)
+        self.assertIsInstance(components, np.ndarray)
+
+        self.assertEqual(prediction.shape, (100,))
+        self.assertEqual(components.shape, (100, 2))
+
+        self.assertTrue(np.allclose(prediction, y))
+
+        self.assertTrue(
+            np.allclose(components[:, 0], model.eval_components(x=x)["gaussian"])
+        )
+        self.assertTrue(
+            np.allclose(components[:, 1], model.eval_components(x=x)["linear"])
+        )
+
+    if PANDAS_INSTALLED:
+
+        async def test_predict_df(self):
+            x = np.linspace(0, 10, 100)
+            model = GaussianModel()
+            params = model.make_params()
+            y = model.eval(params, x=x)
+
+            out = predict_df()
+            out.inputs["x"].value = x
+            out.inputs["model"].value = model
+
+            await out
+
+            prediction = out.outputs["predictions"].value
+
+            self.assertIsInstance(prediction, pd.DataFrame)
+
+            self.assertEqual(prediction.shape, (100, 1))
+            self.assertEqual(prediction.columns, [model._name])
+
+            self.assertTrue(np.allclose(prediction[model._name], y))
+
+        async def test_predict_df_composite(self):
+            x = np.linspace(0, 10, 100)
+            model = GaussianModel(prefix="gaussian") + LinearModel(prefix="linear")
+
+            params = model.make_params()
+            y = model.eval(params, x=x)
+
+            out = predict_df()
+            out.inputs["x"].value = x
+            out.inputs["model"].value = model
+
+            await out
+
+            prediction = out.outputs["predictions"].value
+
+            self.assertIsInstance(prediction, pd.DataFrame)
+
+            self.assertEqual(prediction.shape, (100, 3))
+            self.assertEqual(
+                prediction.columns.tolist(),
+                [
+                    "(Model(gaussian, prefix='gaussian') + Model(linear, prefix='linear'))",
+                    "gaussian",
+                    "linear",
+                ],
+            )
+
+            self.assertTrue(
+                np.allclose(
+                    prediction[
+                        "(Model(gaussian, prefix='gaussian') + Model(linear, prefix='linear'))"
+                    ],
+                    y,
+                )
+            )
+            self.assertTrue(
+                np.allclose(
+                    prediction["gaussian"], model.eval_components(x=x)["gaussian"]
+                )
+            )
+
+            self.assertTrue(
+                np.allclose(prediction["linear"], model.eval_components(x=x)["linear"])
+            )

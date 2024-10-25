@@ -163,7 +163,7 @@ def PolynomialModel_node(
     prefix = autoprefix(PolynomialModel, composite)
 
     # clip degree to 7
-    degree = min(7, max(0, degree))
+    degree = int(min(7, max(0, degree)))
     model = PolynomialModel(degree, prefix=prefix)
 
     # default bounds is inf which does not work for polynomial models
@@ -492,7 +492,7 @@ def auto_model(
 
     composite_model = None
     composite_model_fit = None
-
+    iterations = int(max(1, iterations))
     for i in range(iterations):
         best_model = None
         best_r2 = -np.inf
