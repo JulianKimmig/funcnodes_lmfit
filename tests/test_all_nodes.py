@@ -10,7 +10,7 @@ sys.path.append(
 )  # in case test folder is not in sys path
 from all_nodes_test_base import TestAllNodesBase  # noqa: E402
 
-from test_models import TestModels, TestModelOperations  # noqa: E402
+from test_models import TestModels, TestModelOperations, TestUseModel  # noqa: E402
 from test_params import TestParamNodes  # noqa: E402
 from test_plot import TestPlotFit  # noqa: E402
 from test_fitting import TestFitting  # noqa: E402
@@ -30,6 +30,7 @@ class TestAllNodes(TestAllNodesBase):
         TestModelOperations,
         TestPlotFit,
         TestFitting,
+        TestUseModel,
     ]
 
     # if you have specific nodes you dont want to test, add them here
