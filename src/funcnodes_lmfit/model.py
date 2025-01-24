@@ -489,7 +489,7 @@ AUTOMODELMAP = {model.__name__: model for model in AUTOMODELS}
             "value_options": {"min": 0, "max": 1},
         },
     },
-    seperate_thread=True,
+    separate_thread=True,
 )
 def auto_model(
     x: np.ndarray,
@@ -635,7 +635,7 @@ def quickmodel(
             "value_options": {"min": 0, "max": 1},
         },
     },
-    seperate_thread=True,
+    separate_thread=True,
 )
 def itermodel(
     basemodel: Model,
@@ -747,8 +747,11 @@ reduce_composite_node = fn.NodeDecorator(
     "lmfit.reduce_composite",
     description="Reduce a composite model",
     name="Reduce Composite",
-    outputs=[{"type": CompositeModel, "name": "model"}],
-    seperate_thread=True,
+    outputs=[
+        {"name": "red_model"},
+        {"name": "result"},
+    ],
+    separate_thread=True,
 )(reduce_composite)
 
 MODEL_SHELF = fn.Shelf(

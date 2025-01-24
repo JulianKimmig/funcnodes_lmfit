@@ -17,6 +17,7 @@ from funcnodes_lmfit.model import (
     auto_model,
     quickmodel,
     itermodel,
+    reduce_composite_node,
 )
 from funcnodes_lmfit.use_model import predict, PANDAS_INSTALLED
 
@@ -342,7 +343,7 @@ class TestModels(IsolatedAsyncioTestCase):
         rng = np.random.default_rng(42)
         centers = np.linspace(2, 8, ITERS) + rng.normal(0, 0.1, ITERS)
         sigmas = 0.2 + rng.random(ITERS) * 0.4
-        amplitudes = 0.1 + rng.random(ITERS)
+        amplitudes = 0.5 + rng.random(ITERS)
         model = None
         for i in range(ITERS):
             _model = GaussianModel(prefix=f"gaussian{i}")
@@ -376,6 +377,46 @@ class TestModels(IsolatedAsyncioTestCase):
         self.assertGreater(res.rsquared, 0.95)
 
         self.assertIsInstance(model, CompositeModel)
+        self.assertEqual(len(model.components), ITERS)
+
+    async def test_reduce_composite(self):
+        x = np.linspace(0, 10, 1000)
+        ITERS = 6
+        rng = np.random.default_rng(42)
+        centers = np.linspace(2, 8, ITERS) + rng.normal(0, 0.1, ITERS)
+        sigmas = 0.2 + rng.random(ITERS) * 0.4
+        amplitudes = 0.5 + rng.random(ITERS)
+        model = None
+        for i in range(ITERS * 2):
+            _model = GaussianModel(prefix=f"gaussian{i}")
+            _model.set_param_hint("center", value=centers[i % ITERS])
+            _model.set_param_hint("sigma", value=sigmas[i % ITERS])
+            _model.set_param_hint("amplitude", value=amplitudes[i % ITERS])
+
+            if model is None:
+                model = _model
+            else:
+                model += _model
+
+        y = model.eval(model.make_params(), x=x)
+
+        node = reduce_composite_node()
+        print(node.outputs)
+        node.inputs["model"].value = model
+        node.inputs["x"].value = x
+        node.inputs["y"].value = y
+        node.inputs["r2_threshold"].value = 0.998
+
+        await node
+
+        model: Model = node.outputs["red_model"].value
+        res = node.outputs["result"].value
+
+        self.assertIsInstance(res, ModelResult)
+        self.assertGreater(res.rsquared, 0.95)
+
+        self.assertIsInstance(model, CompositeModel)
+
         self.assertEqual(len(model.components), ITERS)
 
 
