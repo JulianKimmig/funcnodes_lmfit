@@ -1,7 +1,9 @@
+from typing import Optional
 from lmfit import Model
 import numpy as np
 from lmfit.model import ModelResult
 import funcnodes as fn
+from tqdm import tqdm
 
 
 @fn.NodeDecorator(
@@ -10,7 +12,11 @@ import funcnodes as fn
     outputs=[{"type": ModelResult, "name": "result"}],
 )
 def fit(
-    x: np.ndarray, y: np.ndarray, model: Model, try_guess: bool = True
+    x: np.ndarray,
+    y: np.ndarray,
+    model: Model,
+    try_guess: bool = True,
+    node: Optional[fn.Node] = None,
 ) -> ModelResult:
     x = np.asarray(x)
     y = np.asarray(y)
@@ -21,7 +27,19 @@ def fit(
         except Exception:
             pass
 
-    fit_results = model.fit(y, params=params, x=x)
+    _tqdm_kwargs = {
+        "desc": "Fitting composite",
+    }
+    if node is not None:
+        progress = node.progress(**_tqdm_kwargs)
+    else:
+        progress = tqdm(**_tqdm_kwargs)
+
+    def _cb(params, iter, resid, *args, **kws):
+        progress.update(1)
+
+    fit_results = model.fit(y, params=params, x=x, iter_cb=_cb)
+    progress.close()
 
     return fit_results
 

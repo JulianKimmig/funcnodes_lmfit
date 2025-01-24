@@ -36,8 +36,15 @@ from lmfit.models import (
     PowerLawModel,
     ExponentialModel,
 )
+from copy import deepcopy
+from tqdm import tqdm
 import numpy as np
-from .utils import autoprefix, update_model_params, model_composit_train_create
+from .utils import (
+    autoprefix,
+    update_model_params,
+    model_composit_train_create,
+    reduce_composite,
+)
 from ._auto_model import (
     ConstantModel_node,
     ComplexConstantModel_node,
@@ -86,6 +93,7 @@ def SplineModel_node(
     y: Optional[np.ndarray] = None,
     xknots_min: Optional[np.ndarray] = None,
     xknots_max: Optional[np.ndarray] = None,
+    node: Optional[fn.Node] = None,
 ) -> Model:
     xknots = np.asarray(xknots)
     xknots = xknots.flatten()
@@ -108,7 +116,9 @@ def SplineModel_node(
             max=xknots_max[i],
         )
 
-    return model_composit_train_create(model, composite, x, y)
+    return model_composit_train_create(
+        model=model, composite=composite, x=x, y=y, node=node
+    )
 
 
 @fn.NodeDecorator(
@@ -122,6 +132,7 @@ def ExpressionModel_node(
     x: Optional[np.ndarray] = None,
     y: Optional[np.ndarray] = None,
     independent_vars: Optional[Union[str, list[str]]] = None,
+    node: Optional[fn.Node] = None,
 ) -> Model:
     if independent_vars is not None:
         if isinstance(independent_vars, str):
@@ -136,7 +147,9 @@ def ExpressionModel_node(
     for param in model.param_names:
         model.set_param_hint(param, value=1)
 
-    return model_composit_train_create(model, composite, x, y)
+    return model_composit_train_create(
+        model=model, composite=composite, x=x, y=y, node=node
+    )
 
 
 @fn.NodeDecorator(
@@ -159,6 +172,7 @@ def PolynomialModel_node(
     y: Optional[np.ndarray] = None,
     min_c: float = -(10**8),
     max_c: float = 10**8,
+    node: Optional[fn.Node] = None,
 ) -> Model:
     prefix = autoprefix(PolynomialModel, composite)
 
@@ -170,7 +184,9 @@ def PolynomialModel_node(
     for i in range(degree + 1):
         model.set_param_hint(f"{prefix}c{i}", min=min_c, max=max_c)
 
-    return model_composit_train_create(model, composite, x, y)
+    return model_composit_train_create(
+        model=model, composite=composite, x=x, y=y, node=node
+    )
 
 
 @fn.NodeDecorator(
@@ -210,6 +226,7 @@ def ThermalDistributionModel_node(
     kt_min: Optional[float] = None,
     kt_max: Optional[float] = None,
     kt_vary: Optional[bool] = True,
+    node: Optional[fn.Node] = None,
 ) -> Model:
     prefix = autoprefix(ThermalDistributionModel, composite)
     model = ThermalDistributionModel(prefix=prefix, form=form)
@@ -237,7 +254,9 @@ def ThermalDistributionModel_node(
         vary=kt_vary,
     )
 
-    return model_composit_train_create(model, composite, x, y)
+    return model_composit_train_create(
+        model=model, composite=composite, x=x, y=y, node=node
+    )
 
 
 @fn.NodeDecorator(
@@ -277,6 +296,7 @@ def StepModel_node(
     sigma_min: Optional[float] = None,
     sigma_max: Optional[float] = None,
     sigma_vary: Optional[bool] = True,
+    node: Optional[fn.Node] = None,
 ) -> Model:
     prefix = autoprefix(StepModel, composite)
     model = StepModel(prefix=prefix, form=form)
@@ -304,7 +324,9 @@ def StepModel_node(
         vary=sigma_vary,
     )
 
-    return model_composit_train_create(model, composite, x, y)
+    return model_composit_train_create(
+        model=model, composite=composite, x=x, y=y, node=node
+    )
 
 
 @fn.NodeDecorator(
@@ -360,6 +382,7 @@ def RectangleModel_node(
     sigma2_min: Optional[float] = None,
     sigma2_max: Optional[float] = None,
     sigma2_vary: Optional[bool] = True,
+    node: Optional[fn.Node] = None,
 ) -> Model:
     prefix = autoprefix(RectangleModel, composite)
     model = RectangleModel(prefix=prefix, form=form)
@@ -403,7 +426,9 @@ def RectangleModel_node(
         vary=sigma2_vary,
     )
 
-    return model_composit_train_create(model, composite, x, y)
+    return model_composit_train_create(
+        model=model, composite=composite, x=x, y=y, node=node
+    )
 
 
 @fn.NodeDecorator(
@@ -467,7 +492,11 @@ AUTOMODELMAP = {model.__name__: model for model in AUTOMODELS}
     seperate_thread=True,
 )
 def auto_model(
-    x: np.ndarray, y: np.ndarray, r2_threshold: float = 0.95, iterations: int = 1
+    x: np.ndarray,
+    y: np.ndarray,
+    r2_threshold: float = 0.95,
+    iterations: int = 1,
+    node: Optional[fn.Node] = None,
 ) -> Tuple[Model, ModelResult]:
     """
     Automatically generate a model from the data
@@ -510,7 +539,19 @@ def auto_model(
             except Exception:
                 guess = model.make_params()
             try:
-                fit: ModelResult = model.fit(data=y_res, params=guess, x=x)
+                _tqdm_kwargs = {
+                    "desc": "Fitting " + modelclass.__name__,
+                }
+                if node is not None:
+                    progress = node.progress(**_tqdm_kwargs)
+                else:
+                    progress = tqdm(**_tqdm_kwargs)
+
+                def _cb(params, iter, resid, *args, **kws):
+                    progress.update(1)
+
+                fit: ModelResult = model.fit(data=y_res, params=guess, x=x, iter_cb=_cb)
+                progress.close()
             except Exception:
                 continue
             r2 = fit.rsquared
@@ -531,7 +572,19 @@ def auto_model(
             composite_model += best_model
 
         # final fit
-        composite_model_fit = composite_model.fit(data=y, x=x)
+        _tqdm_kwargs = {
+            "desc": "Final fit",
+        }
+        if node is not None:
+            progress = node.progress(**_tqdm_kwargs)
+        else:
+            progress = tqdm(**_tqdm_kwargs)
+
+        def _cb(params, iter, resid, *args, **kws):
+            progress.update(1)
+
+        composite_model_fit = composite_model.fit(data=y, x=x, iter_cb=_cb)
+        progress.close()
 
         for param in composite_model_fit.params:
             composite_model.set_param_hint(
@@ -554,7 +607,8 @@ def quickmodel(
     x: Optional[np.ndarray] = None,
     y: Optional[np.ndarray] = None,
     composite: Optional[CompositeModel] = None,
-):
+    node: Optional[fn.Node] = None,
+) -> Model:
     """
     Quick model creation
     """
@@ -565,15 +619,146 @@ def quickmodel(
     prefix = autoprefix(modelclass, composite)
     model = modelclass(prefix=prefix)
 
-    return model_composit_train_create(model, composite, x, y)
+    return model_composit_train_create(
+        model=model, composite=composite, x=x, y=y, node=node
+    )
 
+
+@fn.NodeDecorator(
+    "lmfit.itermodel",
+    description="Iterative model creation",
+    outputs=[{"type": Model, "name": "model"}, {"type": ModelResult, "name": "result"}],
+    default_io_options={
+        "modelname": {"value_options": {"options": list(AUTOMODELMAP.keys())}},
+        "r2_threshold": {
+            "value": 0.95,
+            "value_options": {"min": 0, "max": 1},
+        },
+    },
+    seperate_thread=True,
+)
+def itermodel(
+    basemodel: Model,
+    y: np.ndarray,
+    x: Optional[np.ndarray] = None,
+    r2_threshold: float = 0.95,
+    max_iterations: int = 20,
+    node: Optional[fn.Node] = None,
+) -> Tuple[Model, ModelResult]:
+    """
+    Iterative model
+    """
+    composite_model = None
+    r2_threshold = max(0, min(1, r2_threshold))
+    iterations = int(max(1, max_iterations))
+    start = 0
+    delta_inital = len(y) // 10
+
+    if node:
+        progress = node.progress(desc="Fit", total=iterations)
+    else:
+        progress = tqdm(total=iterations, desc="Iterative model")
+
+    res = y.copy()
+    for i in range(iterations):
+        end = len(y)
+        prefix = autoprefix(basemodel.__class__, composite_model)
+        model: Model = deepcopy(basemodel)
+        model.prefix = prefix
+
+        progress.set_postfix_str("finding subrange")
+
+        while True:
+            _y = res[start:end]
+            _x = x[start:end] if x is not None else None
+
+            try:
+                guess = model.guess(data=_y, x=_x)
+            except Exception:
+                guess = model.make_params()
+
+            model_fit = model.fit(data=_y, params=guess, x=_x)
+
+            r2 = model_fit.rsquared
+
+            if r2 < r2_threshold and end - start > 2:
+                # the model does not fit the data well, try a smaller range
+                end = end - (end - start) // 2
+                continue
+
+            break
+
+        for param in model_fit.params:
+            model.set_param_hint(param, value=model_fit.params[param].value)
+
+        delta = min(delta_inital, len(y) - end)
+
+        progress.set_postfix_str("extending subrange")
+
+        while delta > 0:
+            _y = res[start : end + delta]
+            _x = x[start : end + delta] if x is not None else None
+
+            params = model.make_params()
+            model_fit = model.fit(data=_y, params=params, x=_x)
+
+            r2 = model_fit.rsquared
+
+            if r2 > r2_threshold:
+                end = end + delta
+                delta = min(delta, len(y) - end)
+                continue
+            delta = delta // 2
+
+        for param in model_fit.params:
+            model.set_param_hint(param, value=model_fit.params[param].value)
+
+        res = res - model.eval(model_fit.params, x=x)
+
+        if composite_model is None:
+            composite_model = model
+        else:
+            composite_model += model
+
+        composite_model_fit = composite_model.fit(
+            data=y, x=x, params=composite_model.make_params()
+        )
+        if composite_model_fit.rsquared >= r2_threshold:
+            break
+
+        start = end
+        progress.update(1)
+
+    for param in composite_model_fit.params:
+        composite_model.set_param_hint(
+            param, value=composite_model_fit.params[param].value
+        )
+
+    progress.set_postfix_str("reduce composite")
+    red_model, red_fit = reduce_composite(
+        composite_model, y=y, x=x, r2_threshold=r2_threshold
+    )
+    progress.close()
+
+    return red_model, red_fit or composite_model_fit
+
+
+reduce_composite_node = fn.NodeDecorator(
+    "lmfit.reduce_composite",
+    description="Reduce a composite model",
+    name="Reduce Composite",
+    outputs=[{"type": CompositeModel, "name": "model"}],
+    seperate_thread=True,
+)(reduce_composite)
 
 MODEL_SHELF = fn.Shelf(
     name="Models",
     description="Lmfit models",
     nodes=[
         auto_model,
+        itermodel,
         quickmodel,
+        reduce_composite_node,
         ConstantModel_node,
         ComplexConstantModel_node,
         LinearModel_node,

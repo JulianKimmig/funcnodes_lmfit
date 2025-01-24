@@ -16,6 +16,7 @@ from funcnodes_lmfit.model import (
     merge_models,
     auto_model,
     quickmodel,
+    itermodel,
 )
 from funcnodes_lmfit.use_model import predict, PANDAS_INSTALLED
 
@@ -334,6 +335,48 @@ class TestModels(IsolatedAsyncioTestCase):
         model: Model = ins.outputs["model"].value
 
         self.assertIsInstance(model, GaussianModel)
+
+    async def test_itermodel(self):
+        x = np.linspace(0, 10, 1000)
+        ITERS = 6
+        rng = np.random.default_rng(42)
+        centers = np.linspace(2, 8, ITERS) + rng.normal(0, 0.1, ITERS)
+        sigmas = 0.2 + rng.random(ITERS) * 0.4
+        amplitudes = 0.1 + rng.random(ITERS)
+        model = None
+        for i in range(ITERS):
+            _model = GaussianModel(prefix=f"gaussian{i}")
+            _model.set_param_hint("center", value=centers[i])
+            _model.set_param_hint("sigma", value=sigmas[i])
+            _model.set_param_hint("amplitude", value=amplitudes[i])
+
+            if model is None:
+                model = _model
+            else:
+                model += _model
+
+        params = model.make_params()
+        y = model.eval(params, x=x)
+
+        node = itermodel()
+        basemodel = GaussianModel()
+
+        node.inputs["basemodel"].value = basemodel
+        node.inputs["r2_threshold"].value = 0.998
+        node.inputs["x"].value = x
+        node.inputs["y"].value = y
+        node.inputs["max_iterations"].value = ITERS + 1
+
+        await node
+
+        model: Model = node.outputs["model"].value
+        res = node.outputs["result"].value
+
+        self.assertIsInstance(res, ModelResult)
+        self.assertGreater(res.rsquared, 0.95)
+
+        self.assertIsInstance(model, CompositeModel)
+        self.assertEqual(len(model.components), ITERS)
 
 
 class TestModelOperations(IsolatedAsyncioTestCase):

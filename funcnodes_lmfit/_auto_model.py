@@ -51,6 +51,7 @@ def ConstantModel_node(
     c_min: Optional[float] = None,
     c_max: Optional[float] = None,
     c_vary: bool = True,
+    node: Optional[fn.Node] = None,
 ) -> Model:
     prefix = autoprefix(ConstantModel, composite)
     model = ConstantModel(prefix=prefix)
@@ -63,7 +64,9 @@ def ConstantModel_node(
         vary=c_vary,
     )
 
-    return model_composit_train_create(model, composite, x, y)
+    return model_composit_train_create(
+        model=model, composite=composite, x=x, y=y, node=node
+    )
 
 
 @fn.NodeDecorator(
@@ -94,6 +97,7 @@ def ComplexConstantModel_node(
     im_min: Optional[float] = None,
     im_max: Optional[float] = None,
     im_vary: bool = True,
+    node: Optional[fn.Node] = None,
 ) -> Model:
     prefix = autoprefix(ComplexConstantModel, composite)
     model = ComplexConstantModel(prefix=prefix)
@@ -113,7 +117,9 @@ def ComplexConstantModel_node(
         vary=im_vary,
     )
 
-    return model_composit_train_create(model, composite, x, y)
+    return model_composit_train_create(
+        model=model, composite=composite, x=x, y=y, node=node
+    )
 
 
 @fn.NodeDecorator(
@@ -144,6 +150,7 @@ def LinearModel_node(
     intercept_min: Optional[float] = None,
     intercept_max: Optional[float] = None,
     intercept_vary: bool = True,
+    node: Optional[fn.Node] = None,
 ) -> Model:
     prefix = autoprefix(LinearModel, composite)
     model = LinearModel(prefix=prefix)
@@ -163,7 +170,9 @@ def LinearModel_node(
         vary=intercept_vary,
     )
 
-    return model_composit_train_create(model, composite, x, y)
+    return model_composit_train_create(
+        model=model, composite=composite, x=x, y=y, node=node
+    )
 
 
 @fn.NodeDecorator(
@@ -202,6 +211,7 @@ def QuadraticModel_node(
     c_min: Optional[float] = None,
     c_max: Optional[float] = None,
     c_vary: bool = True,
+    node: Optional[fn.Node] = None,
 ) -> Model:
     prefix = autoprefix(QuadraticModel, composite)
     model = QuadraticModel(prefix=prefix)
@@ -228,7 +238,9 @@ def QuadraticModel_node(
         vary=c_vary,
     )
 
-    return model_composit_train_create(model, composite, x, y)
+    return model_composit_train_create(
+        model=model, composite=composite, x=x, y=y, node=node
+    )
 
 
 @fn.NodeDecorator(
@@ -267,6 +279,7 @@ def GaussianModel_node(
     sigma_min: Optional[float] = 0,
     sigma_max: Optional[float] = None,
     sigma_vary: bool = True,
+    node: Optional[fn.Node] = None,
 ) -> Model:
     prefix = autoprefix(GaussianModel, composite)
     model = GaussianModel(prefix=prefix)
@@ -293,7 +306,9 @@ def GaussianModel_node(
         vary=sigma_vary,
     )
 
-    return model_composit_train_create(model, composite, x, y)
+    return model_composit_train_create(
+        model=model, composite=composite, x=x, y=y, node=node
+    )
 
 
 @fn.NodeDecorator(
@@ -348,6 +363,7 @@ def Gaussian2dModel_node(
     sigmay_min: Optional[float] = 0,
     sigmay_max: Optional[float] = None,
     sigmay_vary: bool = True,
+    node: Optional[fn.Node] = None,
 ) -> Model:
     prefix = autoprefix(Gaussian2dModel, composite)
     model = Gaussian2dModel(prefix=prefix)
@@ -388,7 +404,9 @@ def Gaussian2dModel_node(
         vary=sigmay_vary,
     )
 
-    return model_composit_train_create(model, composite, x, y)
+    return model_composit_train_create(
+        model=model, composite=composite, x=x, y=y, node=node
+    )
 
 
 @fn.NodeDecorator(
@@ -427,6 +445,7 @@ def LorentzianModel_node(
     sigma_min: Optional[float] = 0,
     sigma_max: Optional[float] = None,
     sigma_vary: bool = True,
+    node: Optional[fn.Node] = None,
 ) -> Model:
     prefix = autoprefix(LorentzianModel, composite)
     model = LorentzianModel(prefix=prefix)
@@ -453,7 +472,9 @@ def LorentzianModel_node(
         vary=sigma_vary,
     )
 
-    return model_composit_train_create(model, composite, x, y)
+    return model_composit_train_create(
+        model=model, composite=composite, x=x, y=y, node=node
+    )
 
 
 @fn.NodeDecorator(
@@ -500,6 +521,7 @@ def SplitLorentzianModel_node(
     sigma_r_min: Optional[float] = 0,
     sigma_r_max: Optional[float] = None,
     sigma_r_vary: bool = True,
+    node: Optional[fn.Node] = None,
 ) -> Model:
     prefix = autoprefix(SplitLorentzianModel, composite)
     model = SplitLorentzianModel(prefix=prefix)
@@ -533,7 +555,9 @@ def SplitLorentzianModel_node(
         vary=sigma_r_vary,
     )
 
-    return model_composit_train_create(model, composite, x, y)
+    return model_composit_train_create(
+        model=model, composite=composite, x=x, y=y, node=node
+    )
 
 
 @fn.NodeDecorator(
@@ -572,6 +596,7 @@ def VoigtModel_node(
     sigma_min: Optional[float] = 0,
     sigma_max: Optional[float] = None,
     sigma_vary: bool = True,
+    node: Optional[fn.Node] = None,
 ) -> Model:
     prefix = autoprefix(VoigtModel, composite)
     model = VoigtModel(prefix=prefix)
@@ -598,7 +623,9 @@ def VoigtModel_node(
         vary=sigma_vary,
     )
 
-    return model_composit_train_create(model, composite, x, y)
+    return model_composit_train_create(
+        model=model, composite=composite, x=x, y=y, node=node
+    )
 
 
 @fn.NodeDecorator(
@@ -645,6 +672,7 @@ def PseudoVoigtModel_node(
     fraction_min: Optional[float] = 0.0,
     fraction_max: Optional[float] = 1.0,
     fraction_vary: bool = True,
+    node: Optional[fn.Node] = None,
 ) -> Model:
     prefix = autoprefix(PseudoVoigtModel, composite)
     model = PseudoVoigtModel(prefix=prefix)
@@ -678,7 +706,9 @@ def PseudoVoigtModel_node(
         vary=fraction_vary,
     )
 
-    return model_composit_train_create(model, composite, x, y)
+    return model_composit_train_create(
+        model=model, composite=composite, x=x, y=y, node=node
+    )
 
 
 @fn.NodeDecorator(
@@ -725,6 +755,7 @@ def MoffatModel_node(
     beta_min: Optional[float] = None,
     beta_max: Optional[float] = None,
     beta_vary: bool = True,
+    node: Optional[fn.Node] = None,
 ) -> Model:
     prefix = autoprefix(MoffatModel, composite)
     model = MoffatModel(prefix=prefix)
@@ -758,7 +789,9 @@ def MoffatModel_node(
         vary=beta_vary,
     )
 
-    return model_composit_train_create(model, composite, x, y)
+    return model_composit_train_create(
+        model=model, composite=composite, x=x, y=y, node=node
+    )
 
 
 @fn.NodeDecorator(
@@ -813,6 +846,7 @@ def Pearson4Model_node(
     skew_min: Optional[float] = -1000,
     skew_max: Optional[float] = 1000,
     skew_vary: bool = True,
+    node: Optional[fn.Node] = None,
 ) -> Model:
     prefix = autoprefix(Pearson4Model, composite)
     model = Pearson4Model(prefix=prefix)
@@ -853,7 +887,9 @@ def Pearson4Model_node(
         vary=skew_vary,
     )
 
-    return model_composit_train_create(model, composite, x, y)
+    return model_composit_train_create(
+        model=model, composite=composite, x=x, y=y, node=node
+    )
 
 
 @fn.NodeDecorator(
@@ -900,6 +936,7 @@ def Pearson7Model_node(
     expon_min: Optional[float] = None,
     expon_max: Optional[float] = 100,
     expon_vary: bool = True,
+    node: Optional[fn.Node] = None,
 ) -> Model:
     prefix = autoprefix(Pearson7Model, composite)
     model = Pearson7Model(prefix=prefix)
@@ -933,7 +970,9 @@ def Pearson7Model_node(
         vary=expon_vary,
     )
 
-    return model_composit_train_create(model, composite, x, y)
+    return model_composit_train_create(
+        model=model, composite=composite, x=x, y=y, node=node
+    )
 
 
 @fn.NodeDecorator(
@@ -972,6 +1011,7 @@ def StudentsTModel_node(
     sigma_min: Optional[float] = 0.0,
     sigma_max: Optional[float] = 100,
     sigma_vary: bool = True,
+    node: Optional[fn.Node] = None,
 ) -> Model:
     prefix = autoprefix(StudentsTModel, composite)
     model = StudentsTModel(prefix=prefix)
@@ -998,7 +1038,9 @@ def StudentsTModel_node(
         vary=sigma_vary,
     )
 
-    return model_composit_train_create(model, composite, x, y)
+    return model_composit_train_create(
+        model=model, composite=composite, x=x, y=y, node=node
+    )
 
 
 @fn.NodeDecorator(
@@ -1045,6 +1087,7 @@ def BreitWignerModel_node(
     q_min: Optional[float] = None,
     q_max: Optional[float] = None,
     q_vary: bool = True,
+    node: Optional[fn.Node] = None,
 ) -> Model:
     prefix = autoprefix(BreitWignerModel, composite)
     model = BreitWignerModel(prefix=prefix)
@@ -1078,7 +1121,9 @@ def BreitWignerModel_node(
         vary=q_vary,
     )
 
-    return model_composit_train_create(model, composite, x, y)
+    return model_composit_train_create(
+        model=model, composite=composite, x=x, y=y, node=node
+    )
 
 
 @fn.NodeDecorator(
@@ -1117,6 +1162,7 @@ def LognormalModel_node(
     sigma_min: Optional[float] = 0,
     sigma_max: Optional[float] = None,
     sigma_vary: bool = True,
+    node: Optional[fn.Node] = None,
 ) -> Model:
     prefix = autoprefix(LognormalModel, composite)
     model = LognormalModel(prefix=prefix)
@@ -1143,7 +1189,9 @@ def LognormalModel_node(
         vary=sigma_vary,
     )
 
-    return model_composit_train_create(model, composite, x, y)
+    return model_composit_train_create(
+        model=model, composite=composite, x=x, y=y, node=node
+    )
 
 
 @fn.NodeDecorator(
@@ -1182,6 +1230,7 @@ def DampedOscillatorModel_node(
     sigma_min: Optional[float] = 0,
     sigma_max: Optional[float] = None,
     sigma_vary: bool = True,
+    node: Optional[fn.Node] = None,
 ) -> Model:
     prefix = autoprefix(DampedOscillatorModel, composite)
     model = DampedOscillatorModel(prefix=prefix)
@@ -1208,7 +1257,9 @@ def DampedOscillatorModel_node(
         vary=sigma_vary,
     )
 
-    return model_composit_train_create(model, composite, x, y)
+    return model_composit_train_create(
+        model=model, composite=composite, x=x, y=y, node=node
+    )
 
 
 @fn.NodeDecorator(
@@ -1255,6 +1306,7 @@ def DampedHarmonicOscillatorModel_node(
     gamma_min: Optional[float] = 1e-19,
     gamma_max: Optional[float] = None,
     gamma_vary: bool = True,
+    node: Optional[fn.Node] = None,
 ) -> Model:
     prefix = autoprefix(DampedHarmonicOscillatorModel, composite)
     model = DampedHarmonicOscillatorModel(prefix=prefix)
@@ -1288,7 +1340,9 @@ def DampedHarmonicOscillatorModel_node(
         vary=gamma_vary,
     )
 
-    return model_composit_train_create(model, composite, x, y)
+    return model_composit_train_create(
+        model=model, composite=composite, x=x, y=y, node=node
+    )
 
 
 @fn.NodeDecorator(
@@ -1335,6 +1389,7 @@ def ExponentialGaussianModel_node(
     gamma_min: Optional[float] = 0,
     gamma_max: Optional[float] = 20,
     gamma_vary: bool = True,
+    node: Optional[fn.Node] = None,
 ) -> Model:
     prefix = autoprefix(ExponentialGaussianModel, composite)
     model = ExponentialGaussianModel(prefix=prefix)
@@ -1368,7 +1423,9 @@ def ExponentialGaussianModel_node(
         vary=gamma_vary,
     )
 
-    return model_composit_train_create(model, composite, x, y)
+    return model_composit_train_create(
+        model=model, composite=composite, x=x, y=y, node=node
+    )
 
 
 @fn.NodeDecorator(
@@ -1415,6 +1472,7 @@ def SkewedGaussianModel_node(
     gamma_min: Optional[float] = None,
     gamma_max: Optional[float] = None,
     gamma_vary: bool = True,
+    node: Optional[fn.Node] = None,
 ) -> Model:
     prefix = autoprefix(SkewedGaussianModel, composite)
     model = SkewedGaussianModel(prefix=prefix)
@@ -1448,7 +1506,9 @@ def SkewedGaussianModel_node(
         vary=gamma_vary,
     )
 
-    return model_composit_train_create(model, composite, x, y)
+    return model_composit_train_create(
+        model=model, composite=composite, x=x, y=y, node=node
+    )
 
 
 @fn.NodeDecorator(
@@ -1495,6 +1555,7 @@ def SkewedVoigtModel_node(
     skew_min: Optional[float] = None,
     skew_max: Optional[float] = None,
     skew_vary: bool = True,
+    node: Optional[fn.Node] = None,
 ) -> Model:
     prefix = autoprefix(SkewedVoigtModel, composite)
     model = SkewedVoigtModel(prefix=prefix)
@@ -1528,7 +1589,9 @@ def SkewedVoigtModel_node(
         vary=skew_vary,
     )
 
-    return model_composit_train_create(model, composite, x, y)
+    return model_composit_train_create(
+        model=model, composite=composite, x=x, y=y, node=node
+    )
 
 
 @fn.NodeDecorator(
@@ -1575,6 +1638,7 @@ def DoniachModel_node(
     gamma_min: Optional[float] = None,
     gamma_max: Optional[float] = None,
     gamma_vary: bool = True,
+    node: Optional[fn.Node] = None,
 ) -> Model:
     prefix = autoprefix(DoniachModel, composite)
     model = DoniachModel(prefix=prefix)
@@ -1608,7 +1672,9 @@ def DoniachModel_node(
         vary=gamma_vary,
     )
 
-    return model_composit_train_create(model, composite, x, y)
+    return model_composit_train_create(
+        model=model, composite=composite, x=x, y=y, node=node
+    )
 
 
 @fn.NodeDecorator(
@@ -1639,6 +1705,7 @@ def PowerLawModel_node(
     exponent_min: Optional[float] = None,
     exponent_max: Optional[float] = None,
     exponent_vary: bool = True,
+    node: Optional[fn.Node] = None,
 ) -> Model:
     prefix = autoprefix(PowerLawModel, composite)
     model = PowerLawModel(prefix=prefix)
@@ -1658,7 +1725,9 @@ def PowerLawModel_node(
         vary=exponent_vary,
     )
 
-    return model_composit_train_create(model, composite, x, y)
+    return model_composit_train_create(
+        model=model, composite=composite, x=x, y=y, node=node
+    )
 
 
 @fn.NodeDecorator(
@@ -1689,6 +1758,7 @@ def ExponentialModel_node(
     decay_min: Optional[float] = None,
     decay_max: Optional[float] = None,
     decay_vary: bool = True,
+    node: Optional[fn.Node] = None,
 ) -> Model:
     prefix = autoprefix(ExponentialModel, composite)
     model = ExponentialModel(prefix=prefix)
@@ -1708,7 +1778,9 @@ def ExponentialModel_node(
         vary=decay_vary,
     )
 
-    return model_composit_train_create(model, composite, x, y)
+    return model_composit_train_create(
+        model=model, composite=composite, x=x, y=y, node=node
+    )
 
 
 _AUTOMODELS = [
