@@ -5,7 +5,7 @@ from .plotting import PLOT_SHELF
 from .fitting import FIT_SHELF
 from .use_model import USEMODEL_SHELF
 
-__version__ = "0.1.2"
+__version__ = "0.2.0"
 
 NODE_SHELF = fn.Shelf(
     nodes=[],
