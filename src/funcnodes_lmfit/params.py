@@ -32,7 +32,7 @@ def _update_param_entries(src: fn.NodeIO, result: str):
     default_io_options={
         "model": {
             "on": {
-                "after_set_value": fn.decorator.update_other_io(
+                "after_set_value": fn.decorator.update_other_io_options(
                     "param_name",
                     lambda x: list(x.param_names),
                 )
